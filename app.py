@@ -14,7 +14,7 @@ handler = WebhookHandler(os.getenv("LINE_CHANNEL_SECRET"))
 
 # --- 新增一個函式：呼叫本地的 Ollama ---
 def ask_ollama(prompt):
-    url = "https://great-results-nail.loca.lt/api/generate"
+    url = "https://petite-doors-laugh.loca.lt//api/generate"
     headers = {"Content-Type": "application/json"}
     data = {
         "model": "deepseek-r1:1.5b", 
