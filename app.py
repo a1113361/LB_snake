@@ -14,7 +14,7 @@ handler = WebhookHandler(os.getenv("LINE_CHANNEL_SECRET"))
 
 # --- 新增一個函式：呼叫本地的 Ollama ---
 def ask_ollama(prompt):
-    url = "https://organize-oem-introductory-because.trycloudflare.com/api/generate"
+    url = "https://assistant-candy-meters-classics.trycloudflare.com/api/generate"
     headers = {"Content-Type": "application/json"}
     data = {
         "model": "deepseek-r1:1.5b", 
