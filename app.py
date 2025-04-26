@@ -3,39 +3,13 @@ import os
 from dotenv import load_dotenv
 from linebot import LineBotApi, WebhookHandler
 from linebot.exceptions import InvalidSignatureError
-from linebot.models import MessageEvent, TextMessage, TextSendMessage
+from linebot.models import MessageEvent, TextMessage
 from handlers import default, faq, news
-import requests  # 用來呼叫 Ollama
 
 load_dotenv()
 app = Flask(__name__)
 line_bot_api = LineBotApi(os.getenv("LINE_CHANNEL_ACCESS_TOKEN"))
 handler = WebhookHandler(os.getenv("LINE_CHANNEL_SECRET"))
-
-# --- 新增一個函式：呼叫本地的 Ollama ---
-def ask_ollama(prompt):
-    url = "https://petite-doors-laugh.loca.lt//api/generate"
-    headers = {"Content-Type": "application/json"}
-    data = {
-        "model": "deepseek-r1:1.5b", 
-        "prompt": prompt,
-        "stream": False
-    }
-    try:
-        response = requests.post(url, headers=headers, json=data)
-        response.raise_for_status()  # 如果回傳錯誤，會拋出例外
-
-        # 印出 response 內容來檢查回應格式
-        print(f"Ollama 回應內容: {response.text}")
-        
-        result = response.json()
-        return result.get("response", "很抱歉，AI 回覆失敗了喔。")
-    except requests.exceptions.RequestException as e:
-        print(f"Ollama 請求錯誤：{e}")
-        return "很抱歉，無法聯繫 Ollama。"
-    except ValueError as e:
-        print(f"Ollama 回應錯誤：{e}")
-        return "Ollama 回應格式錯誤。"
 
 @app.route("/callback", methods=["POST"])
 def callback():
@@ -60,9 +34,8 @@ def handle_message(event):
         if reply:
             print("NEWS 命中")
         else:
-            print("沒命中，走 fallback ➔ 叫 Ollama 回答")
-            ai_reply = ask_ollama(msg) 
-            reply = TextSendMessage(text=ai_reply)
+            print("沒命中，走 fallback")
+            reply = default.fallback(msg)
 
     line_bot_api.reply_message(event.reply_token, reply)
 
