@@ -6,6 +6,7 @@ from linebot.exceptions import InvalidSignatureError
 from linebot.models import MessageEvent, TextMessage, TextSendMessage
 from handlers import default, faq, news
 import requests  # 用來呼叫 Ollama
+import re
 
 load_dotenv()
 app = Flask(__name__)
@@ -17,25 +18,28 @@ def ask_ollama(prompt):
     url = "https://e5c7-2001-b400-e758-e07f-8958-e3e-4a6c-8982.ngrok-free.app/api/generate"
     headers = {"Content-Type": "application/json"}
     data = {
-        "model": "deepseek-r1:1.5b", 
-        "prompt": prompt,
+        "model": "deepseek-r1:1.5b",
+        "prompt": f"請用繁體中文回答以下問題：{prompt}",
         "stream": False
     }
     try:
         response = requests.post(url, headers=headers, json=data)
-        response.raise_for_status()  # 如果回傳錯誤，會拋出例外
-
-        # 印出 response 內容來檢查回應格式
+        response.raise_for_status()
         print(f"Ollama 回應內容: {response.text}")
-        
         result = response.json()
-        return result.get("response", "很抱歉，AI 回覆失敗了喔。")
+        ai_reply = result.get("response", "很抱歉，AI 回覆失敗了喔。")
+        ai_reply = clean_response(ai_reply)
+        return ai_reply
     except requests.exceptions.RequestException as e:
         print(f"Ollama 請求錯誤：{e}")
         return "很抱歉，無法聯繫 Ollama。"
     except ValueError as e:
         print(f"Ollama 回應錯誤：{e}")
         return "Ollama 回應格式錯誤。"
+
+def clean_response(response_text):
+    cleaned_text = re.sub(r"<think>.*?</think>", "", response_text, flags=re.DOTALL)
+    return cleaned_text.strip()
 
 @app.route("/callback", methods=["POST"])
 def callback():
